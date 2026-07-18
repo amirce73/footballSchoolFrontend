@@ -5549,6 +5549,21 @@
             </div>
             <div style="height: 300px; width: 100%; border-radius: 10px; overflow: hidden; position: relative;">
                 <div id="map" style="height: 100%; width: 100%; z-index: 1;"></div>
+                <button
+                    type="button"
+                    title="موقعیت من"
+                    onclick="event.preventDefault(); if (navigator.geolocation) { navigator.geolocation.getCurrentPosition((pos) => { const lat = pos.coords.latitude; const lng = pos.coords.longitude; if(window.mapInstance) { window.mapInstance.setView([lat, lng], 16); window.mapMarker.setLatLng([lat, lng]); } if(window.fetchMapAddress) { window.fetchMapAddress(lat, lng); } }, (err) => { alert('دسترسی به موقعیت یاب امکانپذیر نیست.'); }); } else { alert('مرورگر شما از موقعیت یاب پشتیبانی نمیکند.'); }"
+                    style="position: absolute; bottom: 15px; right: 15px; z-index: 1000; background: #eef4ff; color: #1e293b; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2)"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="6" />
+                        <circle cx="12" cy="12" r="2" fill="#1e293b" />
+                        <line x1="12" y1="2" x2="12" y2="6" />
+                        <line x1="12" y1="18" x2="12" y2="22" />
+                        <line x1="2" y1="12" x2="6" y2="12" />
+                        <line x1="18" y1="12" x2="22" y2="12" />
+                    </svg>
+                </button>
             </div>
             <div
                 style="padding: 12px; background: var(--background); border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.9rem; min-height: 60px; display: flex; align-items: center; justify-content: center; text-align: center;">
