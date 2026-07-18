@@ -1613,39 +1613,38 @@ document.addEventListener('DOMContentLoaded', () => {
         createMobileStickyButton();
         window.addEventListener('resize', createMobileStickyButton);
 
-        // --- Handle Keyboard Open for Sticky Button ---
+        // --- Keyboard-aware sticky button: sticks to bottom of visual viewport ---
         // Store initial height BEFORE any keyboard opens
         let INITIAL_VH = window.innerHeight;
-
-        // Update initial height only when it grows (keyboard closing makes it bigger again)
         window.addEventListener('resize', () => {
-            if (window.innerHeight > INITIAL_VH) {
-                INITIAL_VH = window.innerHeight;
-            }
+            if (window.innerHeight > INITIAL_VH) INITIAL_VH = window.innerHeight;
         });
 
-        const updateStickyButtonPosition = () => {
+        const positionStickyAboveKeyboard = () => {
             if (window.innerWidth > 768) return;
             const wrapper = document.querySelector('.sticky-submit-wrapper');
             if (!wrapper) return;
-
             const vv = window.visualViewport;
             if (!vv) return;
 
-            // Works for BOTH modes:
-            // - Android "resize" mode: window.innerHeight shrinks → INITIAL_VH - vv.height gives kb height
-            // - iOS "overlap" mode: window.innerHeight unchanged → INITIAL_VH - vv.height = window.innerHeight - vv.height = kb height
-            const keyboardHeight = INITIAL_VH - vv.height;
+            const isKeyboardOpen = (INITIAL_VH - vv.height) > 100;
 
-            if (keyboardHeight > 100) {
-                // Keyboard is open: float button just above keyboard
-                wrapper.style.bottom = keyboardHeight + 'px';
-                wrapper.style.transition = 'bottom 0.15s ease';
+            if (isKeyboardOpen) {
+                // Use TOP-based positioning relative to the visual viewport.
+                // position:fixed top = vv.offsetTop + vv.height - wrapperHeight
+                // This makes the button bottom edge = bottom of visual viewport (= top of keyboard)
+                // And it follows scrolling because vv.offsetTop updates on scroll.
+                const wrapperHeight = wrapper.offsetHeight || 70;
+                const topPos = vv.offsetTop + vv.height - wrapperHeight;
+                wrapper.style.top = topPos + 'px';
+                wrapper.style.bottom = 'auto';
+                wrapper.style.transition = 'none';
 
                 const bottomNav = document.querySelector('.bottom-nav');
                 if (bottomNav) bottomNav.style.display = 'none';
             } else {
-                // Keyboard is closed: restore
+                // Keyboard closed: restore bottom-based positioning (above bottom-nav)
+                wrapper.style.top = 'auto';
                 wrapper.style.bottom = '65px';
                 wrapper.style.transition = 'bottom 0.25s ease';
 
@@ -1655,17 +1654,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', updateStickyButtonPosition);
+            // resize fires when keyboard opens/closes
+            // scroll fires when user scrolls while keyboard is open
+            window.visualViewport.addEventListener('resize', positionStickyAboveKeyboard);
+            window.visualViewport.addEventListener('scroll', positionStickyAboveKeyboard);
         }
 
-        // Also trigger on focusin to catch cases where visualViewport doesn't fire
+        // Backup: also trigger with delay after focus (keyboards take time to fully open)
         document.addEventListener('focusin', (e) => {
             if (window.innerWidth > 768) return;
             const tagName = e.target ? e.target.tagName : '';
             if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
-                // Delay to let keyboard fully open and vv.height settle
-                setTimeout(updateStickyButtonPosition, 300);
-                setTimeout(updateStickyButtonPosition, 600);
+                setTimeout(positionStickyAboveKeyboard, 300);
+                setTimeout(positionStickyAboveKeyboard, 700);
             }
         });
 
@@ -1674,7 +1675,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const activeTag = document.activeElement ? document.activeElement.tagName : '';
                 if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
-                    setTimeout(updateStickyButtonPosition, 200);
+                    setTimeout(positionStickyAboveKeyboard, 200);
                 }
             }, 50);
         });
