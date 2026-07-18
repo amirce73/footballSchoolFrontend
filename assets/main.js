@@ -1613,7 +1613,17 @@ document.addEventListener('DOMContentLoaded', () => {
         createMobileStickyButton();
         window.addEventListener('resize', createMobileStickyButton);
 
-        // --- Handle Keyboard Open for Sticky Button (visualViewport API) ---
+        // --- Handle Keyboard Open for Sticky Button ---
+        // Store initial height BEFORE any keyboard opens
+        let INITIAL_VH = window.innerHeight;
+
+        // Update initial height only when it grows (keyboard closing makes it bigger again)
+        window.addEventListener('resize', () => {
+            if (window.innerHeight > INITIAL_VH) {
+                INITIAL_VH = window.innerHeight;
+            }
+        });
+
         const updateStickyButtonPosition = () => {
             if (window.innerWidth > 768) return;
             const wrapper = document.querySelector('.sticky-submit-wrapper');
@@ -1622,19 +1632,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const vv = window.visualViewport;
             if (!vv) return;
 
-            // Calculate keyboard height
-            const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+            // Works for BOTH modes:
+            // - Android "resize" mode: window.innerHeight shrinks → INITIAL_VH - vv.height gives kb height
+            // - iOS "overlap" mode: window.innerHeight unchanged → INITIAL_VH - vv.height = window.innerHeight - vv.height = kb height
+            const keyboardHeight = INITIAL_VH - vv.height;
 
-            if (keyboardHeight > 50) {
-                // Keyboard is open: position button just above keyboard
-                wrapper.style.position = 'fixed';
+            if (keyboardHeight > 100) {
+                // Keyboard is open: float button just above keyboard
                 wrapper.style.bottom = keyboardHeight + 'px';
                 wrapper.style.transition = 'bottom 0.15s ease';
 
                 const bottomNav = document.querySelector('.bottom-nav');
                 if (bottomNav) bottomNav.style.display = 'none';
             } else {
-                // Keyboard is closed: restore original position
+                // Keyboard is closed: restore
                 wrapper.style.bottom = '65px';
                 wrapper.style.transition = 'bottom 0.25s ease';
 
@@ -1645,36 +1656,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', updateStickyButtonPosition);
-            window.visualViewport.addEventListener('scroll', updateStickyButtonPosition);
-        } else {
-            // Fallback for browsers without visualViewport
-            const handleFocusIn = (e) => {
-                if (window.innerWidth > 768) return;
-                const tagName = e.target ? e.target.tagName : '';
-                if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
-                    const wrapper = document.querySelector('.sticky-submit-wrapper');
-                    if (wrapper) {
-                        wrapper.style.bottom = '0px';
-                        wrapper.style.transition = 'bottom 0.15s ease';
-                    }
-                    const bottomNav = document.querySelector('.bottom-nav');
-                    if (bottomNav) bottomNav.style.display = 'none';
-                }
-            };
-            const handleFocusOut = (e) => {
-                if (window.innerWidth > 768) return;
-                setTimeout(() => {
-                    const activeTag = document.activeElement ? document.activeElement.tagName : '';
-                    if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
-                        const wrapper = document.querySelector('.sticky-submit-wrapper');
-                        if (wrapper) wrapper.style.bottom = '65px';
-                        const bottomNav = document.querySelector('.bottom-nav');
-                        if (bottomNav) bottomNav.style.display = '';
-                    }
-                }, 100);
-            };
-            document.addEventListener('focusin', handleFocusIn);
-            document.addEventListener('focusout', handleFocusOut);
         }
+
+        // Also trigger on focusin to catch cases where visualViewport doesn't fire
+        document.addEventListener('focusin', (e) => {
+            if (window.innerWidth > 768) return;
+            const tagName = e.target ? e.target.tagName : '';
+            if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+                // Delay to let keyboard fully open and vv.height settle
+                setTimeout(updateStickyButtonPosition, 300);
+                setTimeout(updateStickyButtonPosition, 600);
+            }
+        });
+
+        document.addEventListener('focusout', (e) => {
+            if (window.innerWidth > 768) return;
+            setTimeout(() => {
+                const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+                    setTimeout(updateStickyButtonPosition, 200);
+                }
+            }, 50);
+        });
     }
 });
