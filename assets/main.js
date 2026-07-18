@@ -1630,12 +1630,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const isKeyboardOpen = (INITIAL_VH - vv.height) > 100;
 
             if (isKeyboardOpen) {
-                // Use TOP-based positioning relative to the visual viewport.
-                // position:fixed top = vv.offsetTop + vv.height - wrapperHeight
-                // This makes the button bottom edge = bottom of visual viewport (= top of keyboard)
-                // And it follows scrolling because vv.offsetTop updates on scroll.
+                // TOP-based positioning: place button right above keyboard.
+                // vv.height = visible area height above keyboard (constant while keyboard is open).
+                // Do NOT include vv.offsetTop — that changes on scroll and would move the button incorrectly.
+                // position:fixed is relative to the layout viewport, so top = vv.height - wrapperHeight
+                // puts the button's bottom edge at vv.height = top of keyboard, always.
                 const wrapperHeight = wrapper.offsetHeight || 70;
-                const topPos = vv.offsetTop + vv.height - wrapperHeight;
+                const topPos = vv.height - wrapperHeight;
                 wrapper.style.top = topPos + 'px';
                 wrapper.style.bottom = 'auto';
                 wrapper.style.transition = 'none';
