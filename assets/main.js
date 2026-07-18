@@ -1613,14 +1613,15 @@ document.addEventListener('DOMContentLoaded', () => {
         createMobileStickyButton();
         window.addEventListener('resize', createMobileStickyButton);
 
-        // --- Keyboard-aware sticky button: sticks to bottom of visual viewport ---
-        // Store initial height BEFORE any keyboard opens
+        // --- Aggressive Keyboard-aware sticky button ---
         let INITIAL_VH = window.innerHeight;
         window.addEventListener('resize', () => {
             if (window.innerHeight > INITIAL_VH) INITIAL_VH = window.innerHeight;
         });
 
-        const positionStickyAboveKeyboard = () => {
+        let isTracking = false;
+
+        const updateStickyPosition = () => {
             if (window.innerWidth > 768) return;
             const wrapper = document.querySelector('.sticky-submit-wrapper');
             if (!wrapper) return;
@@ -1630,13 +1631,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const isKeyboardOpen = (INITIAL_VH - vv.height) > 100;
 
             if (isKeyboardOpen) {
-                // TOP-based positioning: place button right above keyboard.
-                // vv.height = visible area height above keyboard (constant while keyboard is open).
-                // Do NOT include vv.offsetTop — that changes on scroll and would move the button incorrectly.
-                // position:fixed is relative to the layout viewport, so top = vv.height - wrapperHeight
-                // puts the button's bottom edge at vv.height = top of keyboard, always.
                 const wrapperHeight = wrapper.offsetHeight || 70;
-                const topPos = vv.height - wrapperHeight;
+                // vv.offsetTop is the distance from the layout viewport top to the visual viewport top
+                // vv.height is the height of the visible area
+                // Therefore vv.offsetTop + vv.height is the exact Y coordinate of the keyboard's top edge in the layout viewport
+                const topPos = vv.offsetTop + vv.height - wrapperHeight;
+
                 wrapper.style.top = topPos + 'px';
                 wrapper.style.bottom = 'auto';
                 wrapper.style.transition = 'none';
@@ -1644,7 +1644,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bottomNav = document.querySelector('.bottom-nav');
                 if (bottomNav) bottomNav.style.display = 'none';
             } else {
-                // Keyboard closed: restore bottom-based positioning (above bottom-nav)
                 wrapper.style.top = 'auto';
                 wrapper.style.bottom = '65px';
                 wrapper.style.transition = 'bottom 0.25s ease';
@@ -1654,20 +1653,31 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        if (window.visualViewport) {
-            // resize fires when keyboard opens/closes
-            // scroll fires when user scrolls while keyboard is open
-            window.visualViewport.addEventListener('resize', positionStickyAboveKeyboard);
-            window.visualViewport.addEventListener('scroll', positionStickyAboveKeyboard);
-        }
+        const onViewportChange = () => {
+            if (!isTracking) {
+                isTracking = true;
+                requestAnimationFrame(() => {
+                    updateStickyPosition();
+                    isTracking = false;
+                });
+            }
+        };
 
-        // Backup: also trigger with delay after focus (keyboards take time to fully open)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', onViewportChange);
+            window.visualViewport.addEventListener('scroll', onViewportChange);
+        }
+        window.addEventListener('scroll', onViewportChange);
+        window.addEventListener('touchmove', onViewportChange); // Aggressive tracking during scroll drag
+
+        // Backup for focus
         document.addEventListener('focusin', (e) => {
             if (window.innerWidth > 768) return;
             const tagName = e.target ? e.target.tagName : '';
             if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
-                setTimeout(positionStickyAboveKeyboard, 300);
-                setTimeout(positionStickyAboveKeyboard, 700);
+                setTimeout(onViewportChange, 100);
+                setTimeout(onViewportChange, 300);
+                setTimeout(onViewportChange, 600);
             }
         });
 
@@ -1676,7 +1686,8 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const activeTag = document.activeElement ? document.activeElement.tagName : '';
                 if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
-                    setTimeout(positionStickyAboveKeyboard, 200);
+                    setTimeout(onViewportChange, 100);
+                    setTimeout(onViewportChange, 300);
                 }
             }, 50);
         });
