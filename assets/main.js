@@ -1612,5 +1612,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         createMobileStickyButton();
         window.addEventListener('resize', createMobileStickyButton);
+
+        // --- Handle Keyboard Open for Sticky Button ---
+        const handleFocusIn = (e) => {
+            if (window.innerWidth > 768) return;
+            const tagName = e.target ? e.target.tagName : '';
+            if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') {
+                const wrapper = document.querySelector('.sticky-submit-wrapper');
+                if (wrapper) wrapper.style.bottom = '0px';
+
+                const bottomNav = document.querySelector('.bottom-nav');
+                if (bottomNav) bottomNav.style.display = 'none';
+            }
+        };
+
+        const handleFocusOut = (e) => {
+            if (window.innerWidth > 768) return;
+            setTimeout(() => {
+                const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && activeTag !== 'SELECT') {
+                    const wrapper = document.querySelector('.sticky-submit-wrapper');
+                    if (wrapper) wrapper.style.bottom = ''; // Reset to CSS default
+
+                    const bottomNav = document.querySelector('.bottom-nav');
+                    if (bottomNav) bottomNav.style.display = '';
+                }
+            }, 50);
+        };
+
+        document.addEventListener('focusin', handleFocusIn);
+        document.addEventListener('focusout', handleFocusOut);
     }
 });
