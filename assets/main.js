@@ -1613,34 +1613,68 @@ document.addEventListener('DOMContentLoaded', () => {
         createMobileStickyButton();
         window.addEventListener('resize', createMobileStickyButton);
 
-        // --- Handle Keyboard Open for Sticky Button ---
-        const handleFocusIn = (e) => {
+        // --- Handle Keyboard Open for Sticky Button (visualViewport API) ---
+        const updateStickyButtonPosition = () => {
             if (window.innerWidth > 768) return;
-            const tagName = e.target ? e.target.tagName : '';
-            if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') {
-                const wrapper = document.querySelector('.sticky-submit-wrapper');
-                if (wrapper) wrapper.style.bottom = '0px';
+            const wrapper = document.querySelector('.sticky-submit-wrapper');
+            if (!wrapper) return;
+
+            const vv = window.visualViewport;
+            if (!vv) return;
+
+            // Calculate keyboard height
+            const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+
+            if (keyboardHeight > 50) {
+                // Keyboard is open: position button just above keyboard
+                wrapper.style.position = 'fixed';
+                wrapper.style.bottom = keyboardHeight + 'px';
+                wrapper.style.transition = 'bottom 0.15s ease';
 
                 const bottomNav = document.querySelector('.bottom-nav');
                 if (bottomNav) bottomNav.style.display = 'none';
+            } else {
+                // Keyboard is closed: restore original position
+                wrapper.style.bottom = '65px';
+                wrapper.style.transition = 'bottom 0.25s ease';
+
+                const bottomNav = document.querySelector('.bottom-nav');
+                if (bottomNav) bottomNav.style.display = '';
             }
         };
 
-        const handleFocusOut = (e) => {
-            if (window.innerWidth > 768) return;
-            setTimeout(() => {
-                const activeTag = document.activeElement ? document.activeElement.tagName : '';
-                if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && activeTag !== 'SELECT') {
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateStickyButtonPosition);
+            window.visualViewport.addEventListener('scroll', updateStickyButtonPosition);
+        } else {
+            // Fallback for browsers without visualViewport
+            const handleFocusIn = (e) => {
+                if (window.innerWidth > 768) return;
+                const tagName = e.target ? e.target.tagName : '';
+                if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
                     const wrapper = document.querySelector('.sticky-submit-wrapper');
-                    if (wrapper) wrapper.style.bottom = ''; // Reset to CSS default
-
+                    if (wrapper) {
+                        wrapper.style.bottom = '0px';
+                        wrapper.style.transition = 'bottom 0.15s ease';
+                    }
                     const bottomNav = document.querySelector('.bottom-nav');
-                    if (bottomNav) bottomNav.style.display = '';
+                    if (bottomNav) bottomNav.style.display = 'none';
                 }
-            }, 50);
-        };
-
-        document.addEventListener('focusin', handleFocusIn);
-        document.addEventListener('focusout', handleFocusOut);
+            };
+            const handleFocusOut = (e) => {
+                if (window.innerWidth > 768) return;
+                setTimeout(() => {
+                    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                    if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+                        const wrapper = document.querySelector('.sticky-submit-wrapper');
+                        if (wrapper) wrapper.style.bottom = '65px';
+                        const bottomNav = document.querySelector('.bottom-nav');
+                        if (bottomNav) bottomNav.style.display = '';
+                    }
+                }, 100);
+            };
+            document.addEventListener('focusin', handleFocusIn);
+            document.addEventListener('focusout', handleFocusOut);
+        }
     }
 });
