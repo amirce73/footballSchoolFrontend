@@ -722,13 +722,18 @@ document.addEventListener('DOMContentLoaded', () => {
             'guardianMobile', 'tel', 'emergencyPhone', 'postalCode', 'cardNumber', 'sheba'
         ];
 
+        const socialFields = ['telegram', 'instagram', 'linkedIn', 'facebook', 'website', 'eitaa', 'bale', 'rubika'];
+
         // Ensure real-time character stripping
         if (strictStringFields.includes(name)) {
             // Remove any Persian/English digits
             target.value = target.value.replace(/[0-9۰-۹]/g, '');
-        } else if (strictNumericFields.includes(name) || isNumericMode) {
+        } else if (strictNumericFields.includes(name) || isNumericMode || name === 'whatsapp') {
             // Remove any non-digits
             target.value = target.value.replace(/[^0-9۰-۹]/g, '');
+        } else if (socialFields.includes(name)) {
+            // Allow English letters, digits, and common symbols used in URLs/Emails/Handles
+            target.value = target.value.replace(/[^A-Za-z0-9@._:\/\-]/g, '');
         }
 
         // Real-time custom validations
@@ -911,7 +916,100 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             email: { regex: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/, msg: 'ایمیل معتبر نیست' },
-            website: { regex: /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/.*)?$/, msg: 'آدرس سایت معتبر نیست' },
+            website: { regex: /^((https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?)?$/, msg: 'آدرس وب‌سایت وارد شده نامعتبر است' },
+            telegram: {
+                customCheck: (val) => {
+                    const idPart = val.replace(/^(https?:\/\/)?(t\.me\/)/, '').replace(/^@/, '');
+                    if (/^[0-9]+$/.test(idPart)) return false;
+                    return /^(https?:\/\/)?(t\.me\/[A-Za-z0-9_]{5,}|@[A-Za-z0-9_]{5,})$/.test(val);
+                },
+                msg: (val) => {
+                    const idPart = val.replace(/^(https?:\/\/)?(t\.me\/)/, '').replace(/^@/, '');
+                    if (/^[0-9]+$/.test(idPart)) return 'شناسه تلگرام نمی‌تواند فقط شامل عدد باشد';
+                    return 'شناسه صحیح تلگرام وارد کنید (حداقل ۵ حرف)';
+                }
+            },
+            instagram: {
+                customCheck: (val) => {
+                    const idPart = val.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').replace(/^@/, '').replace(/\/?$/, '');
+                    if (/^[0-9]+$/.test(idPart)) return false;
+                    return /^(https?:\/\/)?(www\.)?instagram\.com\/[A-Za-z0-9._]{1,30}\/?$|^@[A-Za-z0-9._]{1,30}$/.test(val);
+                },
+                msg: (val) => {
+                    const idPart = val.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').replace(/^@/, '').replace(/\/?$/, '');
+                    if (/^[0-9]+$/.test(idPart)) return 'شناسه اینستاگرام نمی‌تواند فقط شامل عدد باشد';
+                    return 'شناسه صحیح اینستاگرام وارد کنید';
+                }
+            },
+            whatsapp: { regex: /^09[0-9]{9}$/, msg: 'شماره واتساپ باید شماره همراه ایرانی باشد (مثال: 09123456789)' },
+            bale: {
+                customCheck: (val) => {
+                    if (val.startsWith('@')) {
+                        const raw = val.replace(/^@/, '');
+                        if (/^[0-9]+$/.test(raw)) return false;
+                        return /^@[A-Za-z0-9_]{3,}$/.test(val);
+                    } else {
+                        if (/^[0-9]+$/.test(val)) return /^09[0-9]{9}$/.test(val);
+                        return false;
+                    }
+                },
+                msg: (val) => {
+                    if (val.startsWith('@')) {
+                        const raw = val.replace(/^@/, '');
+                        if (/^[0-9]+$/.test(raw)) return 'شناسه نمی‌تواند فقط شامل عدد باشد';
+                        return 'شناسه بله باید حداقل ۳ حرف و شامل حروف انگلیسی باشد';
+                    } else {
+                        if (/^[0-9]+$/.test(val)) return 'شماره همراه باید ۱۱ رقم و با 09 شروع شود';
+                        return 'فرمت وارد شده نامعتبر است';
+                    }
+                }
+            },
+            eitaa: {
+                customCheck: (val) => {
+                    if (val.startsWith('@')) {
+                        const raw = val.replace(/^@/, '');
+                        if (/^[0-9]+$/.test(raw)) return false;
+                        return /^@[A-Za-z0-9_]{3,}$/.test(val);
+                    } else {
+                        if (/^[0-9]+$/.test(val)) return /^09[0-9]{9}$/.test(val);
+                        return false;
+                    }
+                },
+                msg: (val) => {
+                    if (val.startsWith('@')) {
+                        const raw = val.replace(/^@/, '');
+                        if (/^[0-9]+$/.test(raw)) return 'شناسه نمی‌تواند فقط شامل عدد باشد';
+                        return 'شناسه ایتا باید حداقل ۳ حرف و شامل حروف انگلیسی باشد';
+                    } else {
+                        if (/^[0-9]+$/.test(val)) return 'شماره همراه باید ۱۱ رقم و با 09 شروع شود';
+                        return 'فرمت وارد شده نامعتبر است';
+                    }
+                }
+            },
+            rubika: {
+                customCheck: (val) => {
+                    if (val.startsWith('@')) {
+                        const raw = val.replace(/^@/, '');
+                        if (/^[0-9]+$/.test(raw)) return false;
+                        return /^@[A-Za-z0-9_]{3,}$/.test(val);
+                    } else {
+                        if (/^[0-9]+$/.test(val)) return /^09[0-9]{9}$/.test(val);
+                        return false;
+                    }
+                },
+                msg: (val) => {
+                    if (val.startsWith('@')) {
+                        const raw = val.replace(/^@/, '');
+                        if (/^[0-9]+$/.test(raw)) return 'شناسه نمی‌تواند فقط شامل عدد باشد';
+                        return 'شناسه روبیکا باید حداقل ۳ حرف و شامل حروف انگلیسی باشد';
+                    } else {
+                        if (/^[0-9]+$/.test(val)) return 'شماره همراه باید ۱۱ رقم و با 09 شروع شود';
+                        return 'فرمت وارد شده نامعتبر است';
+                    }
+                }
+            },
+            linkedIn: { regex: /^(https?:\/\/)?([a-z]{2,3}\.)?linkedin\.com\/.*$|^@[A-Za-z0-9_-]+$/, msg: 'شناسه یا آدرس لینکدین نامعتبر است' },
+            facebook: { regex: /^(https?:\/\/)?(www\.)?facebook\.com\/.*$|^@[A-Za-z0-9_.-]+$/, msg: 'شناسه یا آدرس فیسبوک نامعتبر است' },
             postalCode: {
                 regex: /^[0-9]{10}$/,
                 msg: (val) => {
