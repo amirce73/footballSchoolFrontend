@@ -113,9 +113,7 @@ img {
 
 :root {
     --primary: #eab308;
-    --primary-light: color-mix(in srgb, var(--primary) 50%, white);
-    --primary-dark: color-mix(in srgb, var(--primary) 80%, black);
-    --font-color: black;
+    --primary-light: #fef9c3;
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
@@ -1043,6 +1041,7 @@ img {
 
 .term-pill {
     border-radius: var(--radius-xl);
+    background: #ffffff1a;
     margin-bottom: 4px;
     padding: 4px 10px;
     font-size: .7rem;
@@ -1867,7 +1866,7 @@ img {
 
     .dnav-item.active {
         background: var(--primary-light);
-        color: var(--font-color);
+        color: var(--text-dark);
         border-right: 5px solid var(--primary)
     }
 
@@ -2373,10 +2372,9 @@ img {
 }
 
 .club-phone-number-btn {
-    color: var(--font-color);
-    background: var(--primary-light);
+    color: #1e293b;
     border-radius: var(--radius-sm);
-    box-shadow: none;
+    background: #facc15;
     align-items: center;
     gap: 6px;
     padding: 6px 16px;
@@ -2384,7 +2382,8 @@ img {
     font-weight: 800;
     text-decoration: none;
     transition: transform .2s, background .2s;
-    display: inline-flex
+    display: inline-flex;
+    box-shadow: 0 4px 6px -1px #facc1566
 }
 
 .club-phone-number-btn:hover {
@@ -2632,7 +2631,7 @@ img {
         flex-shrink: 0;
         width: 44px;
         height: 44px;
-        font-size: 2.4rem
+        font-size: 1.4rem
     }
 
     .profile-hub-sections-wrapper .verify-banner h4 {
@@ -2739,9 +2738,9 @@ img {
 }
 
 .modal-header-gradient {
-    background: linear-gradient(135deg, var(--primary));
     text-align: center;
     color: #fff;
+    background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
     flex-direction: column;
     align-items: center;
     padding: 24px;
@@ -2990,8 +2989,8 @@ img {
 }
 
 .term-pill {
-    background: var(--primary-light);
-    color: var(--font-color)
+    background: var(--primary);
+    color: #000
 }
 
 .action-label {
@@ -4143,74 +4142,6 @@ img {
     }
 }
 
-@media (width>=768px) {
-    #view-passport-info .form-grid {
-        grid-template-columns: repeat(6, 1fr) !important
-    }
-
-    #view-passport-info .form-grid>.input-group:first-child,
-    #view-passport-info .form-grid>.input-group:nth-child(2),
-    #view-passport-info .form-grid>.input-group:nth-child(3) {
-        grid-column: span 2 !important
-    }
-
-    #view-passport-info .form-grid>.input-group:nth-child(4),
-    #view-passport-info .form-grid>.input-group:nth-child(5) {
-        grid-column: span 3 !important
-    }
-}
-
-@media (width>=992px) {
-    .password-grid {
-        grid-template-columns: repeat(3, 1fr) !important
-    }
-}
-
-.social-add-controls {
-    direction: rtl;
-    flex-direction: column;
-    gap: 8px;
-    display: flex
-}
-
-.social-fields-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    display: grid
-}
-
-.social-buttons-row {
-    justify-content: flex-end;
-    gap: 8px;
-    display: flex
-}
-
-@media (width>=768px) {
-    .social-add-controls {
-        flex-direction: row;
-        align-items: flex-end
-    }
-
-    .social-fields-row {
-        display: contents
-    }
-
-    .social-network-field {
-        flex-shrink: 0;
-        width: 138px
-    }
-
-    .social-url-field {
-        flex: 1;
-        min-width: 0
-    }
-
-    .social-buttons-row {
-        flex-shrink: 0;
-        justify-content: flex-start
-    }
-}
-
 .login-container {
     min-height: 100vh;
     font-family: var(--font-family);
@@ -5169,4 +5100,58 @@ svg.leaflet-image-layer.leaflet-interactive path {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact
     }
+}
+
+.sticky-submit-wrapper {
+    position: fixed;
+    bottom: 65px;
+    left: 0;
+    right: 0;
+    padding: 10px 20px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 999;
+    border-top: 1px solid rgba(234, 179, 8, 0.15);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    transition: bottom 0.25s ease
+}
+
+.sticky-submit-btn {
+    background: var(--success);
+    color: #fff;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+    width: 100%;
+    padding: 14px !important;
+    font-size: 1rem !important;
+    border-radius: 12px !important;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer
+}
+
+@media (max-width: 768px) {
+    .btn-submit-top {
+        display: none !important;
+    }
+}
+
+.error {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1) !important;
+}
+
+.error-label {
+    color: var(--danger) !important;
+}
+
+/* FIX SCROLL ISSUE */
+.main-wrapper,
+.form-grid {
+    padding-bottom: 140px !important;
 }
